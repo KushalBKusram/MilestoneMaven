@@ -1,0 +1,11 @@
+version: '3'
+services:
+  web:
+    build: .
+    ports:
+      - "5001:5000"
+    environment:
+      - API_KEY=
+      - LABEL=tracked
+    volumes:
+      - .:/app
