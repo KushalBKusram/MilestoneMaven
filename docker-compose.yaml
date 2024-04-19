@@ -1,11 +1,12 @@
-version: '3'
 services:
-  web:
+  streamlit-app:
     build: .
     ports:
-      - "5001:5000"
-    environment:
-      - API_KEY=
-      - LABEL=tracked
+      - "8501:8501"
     volumes:
-      - .:/app
+      - ./:/app/
+    environment:
+      - TZ=America/Los_Angeles
+      - DEBIAN_FRONTEND=noninteractive
+      - API_KEY=
+      - LABEL=

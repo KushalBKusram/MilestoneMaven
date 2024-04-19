@@ -76,7 +76,3 @@ class Todoist:
         logger.info(f"Computed total progress for Task ID: {task_id}")
 
         return total_progress
-
-todoist = Todoist()
-task_ids = todoist.get_tracked_task_objs()
-print(task_ids)
