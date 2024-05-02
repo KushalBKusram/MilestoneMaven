@@ -1,4 +1,5 @@
 import os
+import time
 import requests
 from typing import Union, List
 
@@ -23,6 +24,7 @@ class Todoist:
         task_objs = []
         try:
             logger.info("Getting tracked tasks... ")
+            time.sleep(0.5)
             tasks = self.api.get_tasks()
             for task in tasks:
                 if self.label in task.labels:
@@ -40,7 +42,7 @@ class Todoist:
             return None
         
     def get_all_completed_tasks(self) -> dict:
-        url = "https://api.todoist.com/sync/v9/completed/get_all"
+        url = "https://api.todoist.com/sync/v9/completed/get_all?limit=200"
         headers = {
             'Authorization': f'Bearer {os.environ.get("API_KEY")}'
         }
@@ -62,6 +64,7 @@ class Todoist:
         logger.info(f"Computing task progress for Task ID: {task_id}")
         completed_tasks = self.get_all_completed_tasks()
         for completed_task in completed_tasks:
+            time.sleep(1)
             task = self.api.get_task(completed_task['task_id'])
             if task.parent_id == task_id:
                 completed_tasks_count += 1
@@ -72,7 +75,10 @@ class Todoist:
                 pending_tasks_count += 1
 
         if pending_tasks_count > 0:
-            total_progress = completed_tasks_count / pending_tasks_count
+            total_progress = completed_tasks_count / (completed_tasks_count + pending_tasks_count)
         logger.info(f"Computed total progress for Task ID: {task_id}")
 
         return total_progress
+
+todoist = Todoist()
+print(todoist.get_tracked_task_objs())
