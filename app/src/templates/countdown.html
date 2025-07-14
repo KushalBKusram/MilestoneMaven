@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Countdown Service</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 Countdown Service</h1>
+        </header>
+
+        <!-- Add New Countdown Form -->
+        <section class="add-countdown">
+            <h2>Add New Countdown</h2>
+            <form id="addCountdownForm">
+                <div class="form-group">
+                    <label for="title">Title:</label>
+                    <input type="text" id="title" name="title" required placeholder="Enter countdown title">
+                </div>
+                <div class="form-group">
+                    <label for="target_date">Target Date:</label>
+                    <input type="date" id="target_date" name="target_date" required>
+                </div>
+                <button type="submit">Add Countdown</button>
+            </form>
+        </section>
+
+        <!-- Existing Countdowns -->
+        <section class="countdowns">
+            <h2>Your Countdowns</h2>
+            <div id="countdownsList">
+                {% if countdowns %}
+                    {% for countdown in countdowns %}
+                    <div class="countdown-item" data-id="{{ countdown.id }}">
+                        <div class="countdown-content">
+                            <h3 class="countdown-title">{{ countdown.title }}</h3>
+                            <div class="countdown-info">
+                                <span class="target-date">Target: {{ countdown.target_date }}</span>
+                                <span class="days-remaining 
+                                    {% if countdown.days_remaining < 0 %}expired
+                                    {% elif countdown.days_remaining <= 7 %}urgent
+                                    {% elif countdown.days_remaining <= 30 %}warning
+                                    {% endif %}">
+                                    {% if countdown.days_remaining < 0 %}
+                                        {{ countdown.days_remaining|abs }} days ago
+                                    {% elif countdown.days_remaining == 0 %}
+                                        Today!
+                                    {% elif countdown.days_remaining == 1 %}
+                                        Tomorrow
+                                    {% else %}
+                                        {{ countdown.days_remaining }} days
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="countdown-actions">
+                            <button class="edit-btn" onclick="editCountdown('{{ countdown.id }}', '{{ countdown.title }}', '{{ countdown.target_date }}')">Edit</button>
+                            <button class="delete-btn" onclick="deleteCountdown('{{ countdown.id }}')">Delete</button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-countdowns">
+                        <p>No countdowns yet. Add your first countdown above!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Edit Countdown</h2>
+            <form id="editCountdownForm">
+                <input type="hidden" id="editId" name="id">
+                <div class="form-group">
+                    <label for="editTitle">Title:</label>
+                    <input type="text" id="editTitle" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="editTargetDate">Target Date:</label>
+                    <input type="date" id="editTargetDate" name="target_date" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit">Update Countdown</button>
+                    <button type="button" onclick="closeEditModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Add countdown form handler
+        document.getElementById('addCountdownForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const data = {
+                title: formData.get('title'),
+                target_date: formData.get('target_date')
+            };
+            
+            try {
+                const response = await fetch('/api/countdowns', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + error.error);
+                }
+            } catch (error) {
+                alert('Error adding countdown: ' + error.message);
+            }
+        });
+
+        // Edit countdown function
+        function editCountdown(id, title, targetDate) {
+            document.getElementById('editId').value = id;
+            document.getElementById('editTitle').value = title;
+            document.getElementById('editTargetDate').value = targetDate;
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        // Close edit modal
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        // Edit form handler
+        document.getElementById('editCountdownForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const id = formData.get('id');
+            const data = {
+                title: formData.get('title'),
+                target_date: formData.get('target_date')
+            };
+            
+            try {
+                const response = await fetch(`/api/countdowns/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + error.error);
+                }
+            } catch (error) {
+                alert('Error updating countdown: ' + error.message);
+            }
+        });
+
+        // Delete countdown function
+        async function deleteCountdown(id) {
+            if (confirm('Are you sure you want to delete this countdown?')) {
+                try {
+                    const response = await fetch(`/api/countdowns/${id}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        const error = await response.json();
+                        alert('Error: ' + error.error);
+                    }
+                } catch (error) {
+                    alert('Error deleting countdown: ' + error.message);
+                }
+            }
+        }
+
+        // Modal close handlers
+        document.querySelector('.close').addEventListener('click', closeEditModal);
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('editModal');
+            if (event.target === modal) {
+                closeEditModal();
+            }
+        });
+
+        // Set minimum date to today
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('target_date').setAttribute('min', today);
+            document.getElementById('editTargetDate').setAttribute('min', today);
+        });
+    </script>
+</body>
+</html>

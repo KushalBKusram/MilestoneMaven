@@ -7,6 +7,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 ENV PYTHONDONTWRITEBYTECODE=1
 
-EXPOSE 8501
-
-ENTRYPOINT ["streamlit", "run", "/app/app.py"]
+EXPOSE 8501 5000

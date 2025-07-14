@@ -2,7 +2,7 @@ import asyncio
 
 import streamlit as st
 
-from todoist import Todoist
+from src.repositories.todoist import Todoist
 
 async def main() -> None:
     todoist = Todoist()

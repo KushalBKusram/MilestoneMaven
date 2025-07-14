@@ -4,9 +4,19 @@ services:
     ports:
       - "8501:8501"
     volumes:
-      - ./:/app/
-    environment:
-      - TZ=America/Los_Angeles
-      - DEBIAN_FRONTEND=noninteractive
-      - API_KEY=
-      - LABEL=
+      - ./app:/app:consistent
+    env_file:
+      - .env
+    command: streamlit run /app/src/dashboard.py
+
+  flask-app:
+    build: .
+    ports:
+      - "5001:5000"
+    volumes:
+      - ./app:/app:consistent
+      - ./data:/data:consistent
+    env_file:
+      - .env
+    command: python /app/src/app.py
+    working_dir: /app
